@@ -1,0 +1,25 @@
+# Binaries and build artifacts
+bin/
+examwatch
+coverage.out
+dist/
+
+# Test output directories
+examwatch-run-*/
+
+# Go workspace file
+go.work
+go.work.sum
+
+# IDEs and editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS specific files
+.DS_Store
+.AppleDouble
+.LSOverride
