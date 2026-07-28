@@ -1,6 +1,6 @@
 # Binaries and build artifacts
 bin/
-examwatch
+/examwatch
 coverage.out
 dist/
 
