@@ -158,7 +158,7 @@ func calcStdDev(samples []float64) float64 {
 }
 
 func EvalJitterSpike(series Series) SignatureResult {
-	var rtts []float64
+	rtts := make([]float64, 0, JitterSpikeWindowSize)
 	var spikeStart time.Time
 	inSpike := false
 
