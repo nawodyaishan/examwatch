@@ -1,41 +1,58 @@
-# examwatch
+# 🛡️ examwatch
 
-`examwatch` is a macOS pre-exam rehearsal instrument. It runs during a simulated grid outage (e.g., a UPS test, scheduled maintenance, or a live unannounced cut), collects network and system telemetry at 1-second resolution, and produces a deterministic **PASS / WARN / FAIL** verdict against named failure signatures derived from documented proctoring-platform behavior (e.g., Pearson VUE, Certiverse, PSI Bridge). 
+[![Go Report Card](https://goreportcard.com/badge/github.com/nawodyaishan/examwatch)](https://goreportcard.com/report/github.com/nawodyaishan/examwatch)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://golang.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/nawodyaishan/examwatch/pulls)
 
-Home-proctored certification exams enforce zero-tolerance policies on network drops and webcam disruptions. If you live in a grid-unstable region, `examwatch` gives you the concrete evidence you need to know whether your internet + power backup setup will actually survive a full exam window *before* you are financially and professionally committed to an attempt.
+**`examwatch`** is a specialized macOS terminal application designed for one highly critical task: **verifying your internet and power backup readiness before taking a high-stakes, online proctored certification exam.**
+
+Home-proctored certification exams (like Pearson VUE, PSI Bridge, and Certiverse) enforce strict zero-tolerance policies on network drops, camera freezing, and power losses. If you live in a grid-unstable region, taking an exam from home is incredibly stressful. 
+
+`examwatch` lets you run a **simulated exam rehearsal** during a grid outage (like a UPS test or a scheduled cut). It actively monitors your network and system telemetry at a 1-second resolution, analyzing everything against the strict failure signatures of popular proctoring platforms to give you a definitive **PASS**, **WARN**, or **FAIL** verdict.
+
+Don't gamble your exam fees. Test your grid stability *before* you are financially and professionally committed.
 
 ---
 
-## ⚠️ Important Scope & Hardware Limitations
+## ⚡ Why examwatch?
+
+- **Deterministic Failure Analysis:** We measure your connection against strict rules like `SUSTAINED_LOSS`, `JITTER_SPIKE`, `IP_CHURN`, and `DNS_STALL`.
+- **Beautiful TTY Dashboard:** A live, scrolling terminal dashboard that plots ASCII sparklines for Ping, Jitter, Packet Loss, and Mac Battery state in real-time.
+- **Detailed Forensic Reports:** Generates a full markdown timeline (`report.md`) of exactly when your network dropped or when your power failed, down to the second.
+- **Privacy-First:** Fully offline and local. **No telemetry or data leaves your machine.**
+
+---
+
+## ⚠️ Hardware Limitations & Scope
 
 **`examwatch` does NOT query your UPS directly.** 
 
-Consumer UPS units often expose no USB/serial telemetry. Power events are inferred indirectly via `pmset` AC-state transitions on the host Mac, correlated with network anomalies in the same time window. 
-- **What this means for you:** This tool observes the power state of your Mac battery. It assumes that if your Mac switches to battery power (`AC_DROP`), the grid has dropped. 
+Consumer UPS units often expose no accessible USB/serial telemetry on macOS without proprietary drivers. Instead, power events are inferred indirectly via Darwin `pmset` AC-state transitions on your Mac battery.
+- **What this means for you:** If your Mac switches from "AC Power" to "Battery Power" (`AC_DROP`), `examwatch` assumes the grid has dropped and your UPS has taken over.
 - **Supported Platforms:** macOS only (v1). Relies on Darwin-specific `pmset` behavior.
-- **Privacy:** Fully local. No telemetry or data leaves your machine.
 
 ---
 
-## Installation
+## 📦 Installation
 
-You can install `examwatch` directly using `go install` (requires Go 1.22+):
-
-```bash
-go install github.com/nawodyaishan/examwatch/cmd/examwatch@latest
-```
-
-Alternatively, you can tap it via Homebrew:
+Install `examwatch` using Homebrew for the easiest setup:
 
 ```bash
 brew install nawodyaishan/tap/examwatch
 ```
 
+Or, if you have a Go 1.22+ environment, you can install directly via `go install`:
+
+```bash
+go install github.com/nawodyaishan/examwatch/cmd/examwatch@latest
+```
+
 ---
 
-## Usage
+## 🚀 Usage
 
-Run a rehearsal for the expected duration of your exam (e.g., `60m` or `120m`).
+Run a rehearsal for the expected duration of your exam. We recommend simulating an outage by unplugging your modem's UPS from the wall while this is running.
 
 ```bash
 # Start a 60-minute simulated exam test
@@ -45,23 +62,20 @@ examwatch run --duration 60m --out ./my-run-results/
 examwatch run --duration 120m --interval 2s --out ./my-run-results/
 ```
 
-During the run, `examwatch` will display a live, sticky TTY terminal dashboard with sparklines tracking your RTT, Jitter, Packet Loss, and macOS Power states. 
-
-If you abort the run early (via `Ctrl+C`), `examwatch` performs a graceful shutdown and generates a valid partial report based on the data collected up to that point.
+If you abort the run early (via `Ctrl+C`), `examwatch` gracefully shuts down and generates a valid partial report based on the data collected up to that point.
 
 ---
 
-## Output Artifacts
+## 📄 Output Artifacts
 
-At the end of a run (or upon graceful shutdown), `examwatch` produces the following files in your `--out` directory:
+At the end of a run, `examwatch` produces forensic artifacts in your `--out` directory:
 
-1. **`log.jsonl`** — One JSON object per sample/event, append-only, and flushed on every write. Crash-safe by construction.
-2. **`summary.json`** — Machine-readable verdict mapping to proctor-app failure signatures (`SUSTAINED_LOSS`, `IP_CHURN`, `JITTER_SPIKE`, `AC_DROP`, `DNS_STALL`).
+1. **`log.jsonl`** — One JSON object per sample/event, append-only, flushed on every write. Crash-safe by construction.
+2. **`summary.json`** — Machine-readable verdict mapping to proctor-app failure signatures.
 3. **`report.md`** — A human-readable Markdown report detailing the timeline of events.
 
-### Sample `report.md` Excerpt
-
-Below is a generated snippet of a run that experienced a grid outage, causing the Mac to drop to battery power (`AC_DROP`), followed by a complete router failure resulting in `SUSTAINED_LOSS`:
+<details>
+<summary><b>Click to view a sample <code>report.md</code> excerpt</b></summary>
 
 ```markdown
 # examwatch run report
@@ -72,7 +86,6 @@ Below is a generated snippet of a run that experienced a grid outage, causing th
 |---|---|
 | Start time | 2026-07-28 14:00:00 UTC |
 | Duration | 1h0m0s |
-| Interval | 1s |
 
 ## Timeline
 
@@ -89,9 +102,28 @@ Below is a generated snippet of a run that experienced a grid outage, causing th
 | AC_DROP | WARN | 14:05:00 UTC → 14:15:00 UTC | AC power disconnected during the run |
 | IP_CHURN | PASS | — | — |
 ```
+</details>
 
 ---
 
-## License
+## 🤝 Contributing
 
-MIT License
+We warmly welcome collaborators to `examwatch`! Whether you want to add Windows/Linux support, implement direct UPS querying protocols, or add new network heuristics, your PRs are appreciated.
+
+### Getting Started
+
+1. **Fork the repo** and clone it locally.
+2. **Install Go 1.22+**.
+3. Run the development verification suite before pushing:
+   ```bash
+   make verify
+   ```
+4. **Submit your Pull Request!**
+
+*If you're unsure where to start, check the Issues tab for `good first issue` tags.*
+
+---
+
+## 📝 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
