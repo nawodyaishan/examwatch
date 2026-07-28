@@ -1,0 +1,33 @@
+{
+  "verdict": "FAIL",
+  "meta": {
+    "start_time": "2026-07-28T14:00:00Z",
+    "duration": "1h0m0s",
+    "interval": "1s",
+    "hostname": "test-macbook"
+  },
+  "signatures": [
+    {
+      "name": "SUSTAINED_LOSS",
+      "status": "FAIL",
+      "detail": "100% packet loss sustained for consecutive samples",
+      "evidence": {
+        "start": "2026-07-28T14:10:00Z",
+        "end": "2026-07-28T14:11:00Z"
+      }
+    },
+    {
+      "name": "AC_DROP",
+      "status": "WARN",
+      "detail": "AC power disconnected during the run",
+      "evidence": {
+        "start": "2026-07-28T14:05:00Z",
+        "end": "2026-07-28T14:15:00Z"
+      }
+    },
+    {
+      "name": "IP_CHURN",
+      "status": "PASS"
+    }
+  ]
+}
