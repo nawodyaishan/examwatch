@@ -42,8 +42,13 @@ brews:
   - repository:
       owner: nawodyaishan
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     directory: Formula
+    homepage: "https://github.com/nawodyaishan/examwatch"
+    description: "A macOS-native pre-exam rehearsal tool for grid-unstable regions"
     license: MIT
     test: |
       system "#{bin}/examwatch", "--help"
       system "#{bin}/examwatch", "--version"
+    install: |
+      bin.install "examwatch"
