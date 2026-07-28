@@ -11,7 +11,8 @@ help:
 	@echo "  test-e2e   Run e2e tests"
 	@echo "  test-docker Run all tests inside a Docker container"
 	@echo "  build      Build binary"
-	@echo "  run        Build and run binary (use ARGS=\"--help\")"
+	@echo "  run        Run the app (launches interactive wizard if ARGS are empty)"
+	@echo "  report     Run the report generator (use ARGS=\"<log_file>\")"
 	@echo "  verify     Run all quality checks"
 	@echo "  clean      Remove build artifacts"
 	@echo "  tag        Tag a new version (use V=v0.1.0 MSG=\"...\")"
@@ -45,7 +46,10 @@ build:
 	./scripts/build.sh
 
 run: build
-	./bin/examwatch $(ARGS)
+	./bin/examwatch run $(ARGS)
+
+report: build
+	./bin/examwatch report $(ARGS)
 
 verify:
 	./scripts/verify.sh
