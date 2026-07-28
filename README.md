@@ -2,7 +2,7 @@
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nawodyaishan/examwatch)](https://goreportcard.com/report/github.com/nawodyaishan/examwatch)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://golang.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/nawodyaishan/examwatch/pulls)
 
 **`examwatch`** is a specialized macOS terminal application designed for one highly critical task: **verifying your internet and power backup readiness before taking a high-stakes, online proctored certification exam.**
@@ -17,8 +17,10 @@ Don't gamble your exam fees. Test your grid stability *before* you are financial
 
 ## ⚡ Why examwatch?
 
+- **Interactive UI Wizard:** Simply run `examwatch run` to be greeted with a gorgeous terminal UI that guides you through the setup—no need to memorize CLI flags!
 - **Deterministic Failure Analysis:** We measure your connection against strict rules like `SUSTAINED_LOSS`, `JITTER_SPIKE`, `IP_CHURN`, and `DNS_STALL`.
-- **Beautiful TTY Dashboard:** A live, scrolling terminal dashboard that plots ASCII sparklines for Ping, Jitter, Packet Loss, and Mac Battery state in real-time.
+- **Beautiful TTY Dashboard:** A live, scrolling terminal dashboard that plots ASCII sparklines for Ping, Jitter, Packet Loss, Mac Battery state, and real-time CPU/Mem usage.
+- **Deep System Telemetry:** Actively monitors your CPU, Memory, and Disk usage to alert you of sudden spikes that could cause exam software to crash.
 - **Detailed Forensic Reports:** Generates a full markdown timeline (`report.md`) of exactly when your network dropped or when your power failed, down to the second.
 - **Privacy-First:** Fully offline and local. **No telemetry or data leaves your machine.**
 
@@ -53,6 +55,13 @@ go install github.com/nawodyaishan/examwatch/cmd/examwatch@latest
 ## 🚀 Usage
 
 Run a rehearsal for the expected duration of your exam. We recommend simulating an outage by unplugging your modem's UPS from the wall while this is running.
+
+```bash
+# Launch the interactive wizard
+examwatch run
+```
+
+You can also bypass the wizard by providing the flags directly:
 
 ```bash
 # Start a 60-minute simulated exam test
@@ -113,12 +122,16 @@ We warmly welcome collaborators to `examwatch`! Whether you want to add Windows/
 ### Getting Started
 
 1. **Fork the repo** and clone it locally.
-2. **Install Go 1.22+**.
-3. Run the development verification suite before pushing:
+2. **Install Go 1.25+**.
+3. **Run the interactive wizard:**
+   ```bash
+   make run
+   ```
+4. Run the development verification suite before pushing:
    ```bash
    make verify
    ```
-4. **Submit your Pull Request!**
+5. **Submit your Pull Request!**
 
 *If you're unsure where to start, check the Issues tab for `good first issue` tags.*
 
