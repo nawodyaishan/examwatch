@@ -19,6 +19,6 @@ func (f *Flat) LogEvent(t time.Time, msg string) {
 }
 
 func (f *Flat) Draw(t time.Time, state State) {
-	_, _ = fmt.Fprintf(f.out, "[%s] STATE: RTT=%dms Loss=%.0f%% Jitter=%dms IP=%s Power=%q DNS=%dms\n",
-		t.Format(time.RFC3339), state.RTT, state.Loss, state.Jitter, state.PublicIP, state.MacPower, state.DNSLatency)
+	_, _ = fmt.Fprintf(f.out, "[%s] STATE: RTT=%dms Loss=%.0f%% Jitter=%dms IP=%s Power=%q DNS=%dms CPU=%.1f%% Mem=%.1f%%\n",
+		t.Format(time.RFC3339), state.RTT, state.Loss, state.Jitter, state.PublicIP, state.MacPower, state.DNSLatency, state.CPUPercent, state.MemPercent)
 }

@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 )
-
 type mockSysSampler struct {
-	cpu float64
-	mem float64
+	cpu  float64
+	mem  float64
+	disk float64
 }
 
 func (m *mockSysSampler) SampleCPU(ctx context.Context) (float64, error) {
@@ -19,14 +19,19 @@ func (m *mockSysSampler) SampleMem(ctx context.Context) (float64, error) {
 	return m.mem, nil
 }
 
+func (m *mockSysSampler) SampleDisk(ctx context.Context) (float64, error) {
+	return m.disk, nil
+}
+
 func TestSystemProbe(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	probe := &SystemProbe{
 		Sampler: &mockSysSampler{
-			cpu: 15.5,
-			mem: 45.0,
+			cpu:  15.5,
+			mem:  45.0,
+			disk: 60.0,
 		},
 		Interval: 10 * time.Millisecond,
 	}
@@ -45,6 +50,9 @@ func TestSystemProbe(t *testing.T) {
 		}
 		if sample.MemUsedPercent != 45.0 {
 			t.Errorf("expected Mem 45.0, got %v", sample.MemUsedPercent)
+		}
+		if sample.DiskUsedPercent != 60.0 {
+			t.Errorf("expected Disk 60.0, got %v", sample.DiskUsedPercent)
 		}
 	case <-time.After(1 * time.Second):
 		t.Fatalf("timeout waiting for sample")

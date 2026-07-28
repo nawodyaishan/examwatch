@@ -34,7 +34,7 @@ func TestFlat(t *testing.T) {
 		}
 		f.Draw(ts, state)
 		out := buf.String()
-		want := "[2026-07-28T14:32:01Z] STATE: RTT=25ms Loss=10% Jitter=5ms IP=1.1.1.1 Power=\"AC Power\" DNS=15ms\n"
+		want := "[2026-07-28T14:32:01Z] STATE: RTT=25ms Loss=10% Jitter=5ms IP=1.1.1.1 Power=\"AC Power\" DNS=15ms CPU=0.0% Mem=0.0%\n"
 		if out != want {
 			t.Errorf("Flat.Draw() = %q, want %q", out, want)
 		}

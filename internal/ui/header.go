@@ -33,6 +33,8 @@ type State struct {
 	MacPower       string // e.g. "AC connected  98%"
 	DNSLatency     int64
 	DNSStatus      Status
+	CPUPercent     float64
+	MemPercent     float64
 }
 
 type Header struct {
@@ -161,7 +163,12 @@ func (h *Header) Draw(state State) {
 	dnsCol := fmt.Sprintf("%-15s %-6s %s", "DNS latency", dnsStr, h.colorStatus(state.DNSStatus))
 	buf.WriteString(h.formatLine(dnsVis, dnsCol))
 
-	// Line 8: Bottom border
+	// Line 8: System
+	sysStr := fmt.Sprintf("CPU: %.1f%%  Mem: %.1f%%", state.CPUPercent, state.MemPercent)
+	sysVis := fmt.Sprintf("%-15s %s", "System", sysStr)
+	buf.WriteString(h.formatLine(sysVis, sysVis))
+
+	// Line 9: Bottom border
 	buf.WriteString("\033[2K└─────────────────────────────────────────────────────────┘\n")
 
 	_, _ = h.out.Write(buf.Bytes())

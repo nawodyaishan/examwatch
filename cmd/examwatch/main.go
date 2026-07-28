@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/charmbracelet/huh"
+
 	"github.com/nawodyaishan/examwatch/internal/probe"
 	"github.com/nawodyaishan/examwatch/internal/report"
 	"github.com/nawodyaishan/examwatch/internal/rules"
@@ -55,17 +57,55 @@ func runRun(args []string) {
 	noColor := fs.Bool("no-color", false, "Disable color output")
 	_ = fs.Parse(args)
 
-	if *duration <= 0 {
-		fmt.Fprintln(os.Stderr, "invalid --duration")
-		os.Exit(1)
-	}
-	if *interval <= 0 {
-		fmt.Fprintln(os.Stderr, "invalid --interval")
-		os.Exit(1)
-	}
-	if *outDir == "" {
-		fmt.Fprintln(os.Stderr, "--out must be specified")
-		os.Exit(1)
+	if *duration <= 0 || *interval <= 0 || *outDir == "" {
+		var durStr, intStr, outStr string
+		var confirm bool
+
+		form := huh.NewForm(
+			huh.NewGroup(
+				huh.NewInput().
+					Title("How long should the exam watch run for? (e.g. 1h30m)").
+					Value(&durStr),
+				huh.NewInput().
+					Title("What should the check interval be? (e.g. 1s)").
+					Value(&intStr),
+				huh.NewInput().
+					Title("Where should the report be saved? (e.g. ./report)").
+					Value(&outStr),
+				huh.NewConfirm().
+					Title("Start?").
+					Value(&confirm),
+			),
+		)
+
+		if err := form.Run(); err != nil {
+			fmt.Fprintln(os.Stderr, "Aborted.")
+			os.Exit(1)
+		}
+		if !confirm {
+			fmt.Fprintln(os.Stderr, "Cancelled.")
+			os.Exit(1)
+		}
+
+		d, err := time.ParseDuration(durStr)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "invalid duration")
+			os.Exit(1)
+		}
+		*duration = d
+
+		i, err := time.ParseDuration(intStr)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "invalid interval")
+			os.Exit(1)
+		}
+		*interval = i
+
+		if outStr == "" {
+			fmt.Fprintln(os.Stderr, "invalid out dir")
+			os.Exit(1)
+		}
+		*outDir = outStr
 	}
 
 	if *noColor {
@@ -104,11 +144,11 @@ func runRun(args []string) {
 	defer cancel()
 
 	ch := make(chan interface{}, 100)
-	
+
 	np := probe.NewNetworkProbe(*interval)
 	pp := probe.NewPowerProbe(*interval)
 	sp := probe.NewSystemProbe(*interval)
-	
+
 	if fixPath := os.Getenv("EXAMWATCH_FAKE_PROBES"); fixPath != "" {
 		applyFakeProbes(fixPath, np, pp, sp)
 	}
@@ -130,7 +170,7 @@ func runRun(args []string) {
 		timeline     []report.TimelineEvent
 		rttPoints    []report.SeriesPoint
 	)
-	
+
 	start := time.Now()
 
 	for {
@@ -155,9 +195,9 @@ func runRun(args []string) {
 				currentState.Jitter = v.Jitter.Milliseconds()
 			case probe.PowerEvent:
 				if v.ACConnected {
-					currentState.MacPower = "AC"
+					currentState.MacPower = fmt.Sprintf("AC %d%%", v.BatteryPct)
 				} else {
-					currentState.MacPower = "Battery"
+					currentState.MacPower = fmt.Sprintf("Battery %d%%", v.BatteryPct)
 				}
 				msg := fmt.Sprintf("Power state changed: %s", currentState.MacPower)
 				timeline = append(timeline, report.TimelineEvent{
@@ -168,7 +208,13 @@ func runRun(args []string) {
 					scroller.LogEvent(v.Timestamp, msg)
 				}
 			case probe.SystemSample:
-				// currentState.Sys = ... (not in ui.State right now)
+				currentState.CPUPercent = v.CPUPercent
+				currentState.MemPercent = v.MemUsedPercent
+				// The prompt says "render them in the TTY Scroller and Header". We update Header via State.
+				// For the scroller, maybe we log an event if CPU or Mem is high, but we can also just log every sample. Let's log if it crosses a threshold or just don't log them in the scroller unless requested. "render them in the TTY Scroller"
+				if scroller != nil && (v.CPUPercent > 80 || v.MemUsedPercent > 80) {
+					scroller.LogEvent(v.Timestamp, fmt.Sprintf("High usage! CPU: %.1f%% Mem: %.1f%% Disk: %.1f%%", v.CPUPercent, v.MemUsedPercent, v.DiskUsedPercent))
+				}
 			}
 		case t := <-ticker.C:
 			rs := rules.Sample{
@@ -213,8 +259,8 @@ func flushReport(outDir string, start time.Time, duration, interval time.Duratio
 	sigResults := make([]report.SignatureResult, 0, len(evals))
 	for i, ev := range evals {
 		sigResults = append(sigResults, report.SignatureResult{
-			Name: sigNames[i],
-			Status: report.Status(ev.Verdict.String()),
+			Name:     sigNames[i],
+			Status:   report.Status(ev.Verdict.String()),
 			Evidence: report.EvidenceWindow{Start: ev.Evidence.Start, End: ev.Evidence.End},
 		})
 	}
@@ -263,6 +309,7 @@ type FixtureTick struct {
 	PMSet string  `json:"pmset"`
 	CPU   float64 `json:"cpu"`
 	Mem   float64 `json:"mem"`
+	Disk  float64 `json:"disk"`
 }
 
 type fakeProbes struct {
@@ -328,4 +375,8 @@ func (fp *fakeProbes) SampleCPU(ctx context.Context) (float64, error) {
 func (fp *fakeProbes) SampleMem(ctx context.Context) (float64, error) {
 	fp.advance() // advance on one of them
 	return fp.tick().Mem, nil
+}
+
+func (fp *fakeProbes) SampleDisk(ctx context.Context) (float64, error) {
+	return fp.tick().Disk, nil
 }

@@ -57,12 +57,12 @@ func TestHeader_Draw_NoColor(t *testing.T) {
 		t.Errorf("expected output to start with home cursor \\033[H, got: %q", out)
 	}
 
-	// Verify all 8 lines have clear-line sequence
+	// Verify all 9 lines have clear-line sequence
 	lines := strings.Split(strings.TrimPrefix(out, "\033[H"), "\n")
-	if len(lines) < 8 {
-		t.Fatalf("expected at least 8 lines, got %d", len(lines))
+	if len(lines) < 9 {
+		t.Fatalf("expected at least 9 lines, got %d", len(lines))
 	}
-	for i := 0; i < 8; i++ {
+	for i := 0; i < 9; i++ {
 		if !strings.HasPrefix(lines[i], "\033[2K") {
 			t.Errorf("expected line %d to start with \\033[2K, got: %q", i, lines[i])
 		}
@@ -74,12 +74,12 @@ func TestHeader_Draw_NoColor(t *testing.T) {
 	}
 
 	expectedBottom := "\033[2K└─────────────────────────────────────────────────────────┘"
-	if lines[7] != expectedBottom {
-		t.Errorf("line 7 = %q, want %q", lines[7], expectedBottom)
+	if lines[8] != expectedBottom {
+		t.Errorf("line 8 = %q, want %q", lines[8], expectedBottom)
 	}
 
 	// Check inner content lengths - should be 59 without escape sequence
-	for i := 0; i < 8; i++ {
+	for i := 0; i < 9; i++ {
 		// stripped is the string without \033[2K
 		stripped := strings.TrimPrefix(lines[i], "\033[2K")
 		// count runes
