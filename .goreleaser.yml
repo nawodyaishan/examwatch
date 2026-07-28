@@ -1,0 +1,49 @@
+version: 2
+project_name: examwatch
+
+builds:
+  - main: ./cmd/examwatch
+    binary: examwatch
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/nawodyaishan/examwatch/internal/version.Version={{.Version}}
+      - -X github.com/nawodyaishan/examwatch/internal/version.Commit={{.Commit}}
+      - -X github.com/nawodyaishan/examwatch/internal/version.Date={{.Date}}
+      - -X github.com/nawodyaishan/examwatch/internal/version.GoVersion={{.Env.GOVERSION}}
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+
+brews:
+  - repository:
+      owner: nawodyaishan
+      name: homebrew-tap
+    directory: Formula
+    license: MIT
+    test: |
+      system "#{bin}/examwatch", "--help"
+      system "#{bin}/examwatch", "--version"
