@@ -23,3 +23,4 @@ go.work.sum
 .DS_Store
 .AppleDouble
 .LSOverride
+my-run-results/
